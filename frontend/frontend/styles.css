@@ -1,0 +1,95 @@
+﻿:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Segoe UI, Arial, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.app {
+  width: min(900px, 96vw);
+  margin: 24px auto;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  background: #111827;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 85vh;
+}
+
+.app-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #334155;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.app-header p {
+  margin: 6px 0 0;
+  color: #94a3b8;
+}
+
+.chat-window {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  max-width: 80%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.message.user {
+  align-self: flex-end;
+  background: #2563eb;
+  color: #fff;
+}
+
+.message.bot {
+  align-self: flex-start;
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.chat-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 16px;
+  border-top: 1px solid #334155;
+}
+
+.chat-form input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid #475569;
+  background: #0b1220;
+  color: #e2e8f0;
+}
+
+.chat-form button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #22c55e;
+  color: #062b16;
+  font-weight: 700;
+  cursor: pointer;
+}

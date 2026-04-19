@@ -1,0 +1,26 @@
+﻿<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Recruitment Chatbot</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app-header">
+      <h1>AI Recruitment Agent</h1>
+      <p>Trợ lý tìm việc thông minh</p>
+    </header>
+
+    <section id="chat-window" class="chat-window" aria-live="polite"></section>
+
+    <form id="chat-form" class="chat-form">
+      <input id="message-input" name="message" type="text" placeholder="Nhập nhu cầu tìm việc..." required />
+      <button type="submit">Gửi</button>
+    </form>
+  </main>
+
+  <script src="/frontend/app.js"></script>
+</body>
+</html>
