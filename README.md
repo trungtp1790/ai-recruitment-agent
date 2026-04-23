@@ -1,52 +1,101 @@
-# AI Recruitment Agent
+# AI Recruitment Agent 
 
-Ứng dụng chatbot hỗ trợ tuyển dụng/tìm việc, xây dựng bằng FastAPI + LangGraph + Gemini API.
+An AI-powered recruitment assistant built with `FastAPI`, `LangGraph`, and `Gemini`.
+The system supports natural-language job search by combining intent detection, entity extraction, structured database filtering, and conversational response generation.
 
-## Tính năng chính
+## 1) Project Overview
 
-- Chat qua web UI tại `/chatbot`.
-- API chat qua `POST /api/chat` và `GET /api/chat`.
-- Điều hướng intent với LangGraph (`job_search`, `job_compare`, `identity_query`, `out_of_scope`, `chitchat`).
-- Trích xuất entity (vị trí, địa điểm, kỹ năng, mức lương) và chuẩn hóa salary về VND.
-- Lưu state theo session (in-memory) để giữ ngữ cảnh hội thoại.
+### Problem Statement
 
-## Kiến trúc tổng quan
+Users typically search for jobs using free-form language (for example: "Find AI Engineer roles in Ho Chi Minh City with salary 20-30 million VND"), while job data is usually stored in structured formats.
 
-Luồng xử lý cho một request chat:
+This project addresses that gap by building a chatbot that can:
 
-1. `intent_router` phân loại intent.
-2. Nếu là `job_search`:
+- Understand user intent from natural language.
+- Extract relevant entities (role, location, skills, salary range).
+- Query matching jobs from a database.
+- Return clear, conversational answers across multi-turn interactions.
+
+### Project Objectives
+
+- Build a job-search chatbot with both API endpoints and a web UI.
+- Design a modular processing pipeline using `LangGraph`.
+- Support job data crawling and persistence in PostgreSQL.
+- Preserve session context for multi-turn conversations.
+
+## 2) Implemented Scope
+
+- Chat interface at `http://localhost:8000/chatbot`.
+- Chat API available via `POST /api/chat` and `GET /api/chat`.
+- Intent routing for: `job_search`, `job_compare`, `identity_query`, `out_of_scope`, `chitchat`.
+- Entity extraction and salary normalization into numeric VND values.
+- Job retrieval from PostgreSQL with entity and salary-based filters.
+- Fallback sample data when the database is unavailable or empty.
+- In-memory conversation state management by `session_id`.
+
+## 3) System Architecture
+
+### Core Stack
+
+- Backend API: `FastAPI`
+- Agent orchestration: `LangGraph`
+- LLM provider: `Gemini` (via API key)
+- Database: `PostgreSQL`
+- Data ingestion: `httpx` + Remotive API
+
+### Chat Processing Flow
+
+1. `intent_router` classifies the user message.
+2. If intent is `job_search`, the system runs:
    - `entity_extractor`
    - `salary_parser`
-   - `rag_retriever` (hiện là placeholder dữ liệu mẫu)
-3. `responder` tạo câu trả lời cho người dùng.
+   - `rag_retriever` (query database, fallback to sample data on failures/no results)
+3. `responder` generates the final conversational reply.
 
-Entry point backend: `app/main.py`.
+Application entry point: `app/main.py`.
 
-## Yêu cầu hệ thống
+## 4) Repository Structure
+
+```text
+app/
+  api/            # API routes and dependencies
+  graph/          # StateGraph and processing nodes
+  llm/            # Gemini client integration
+  memory/         # In-memory session state
+  prompts/        # Prompt templates
+  db/             # DSN/URL helpers
+  rag/            # Index/query utilities (in progress)
+  tools/          # Job crawler scripts
+config/
+  settings.py     # Environment-based settings
+frontend/         # index.html, app.js, styles.css
+tests/            # Unit tests
+```
+
+## 5) Setup and Run
+
+### Requirements
 
 - Python `>=3.11`
-- (Khuyến nghị) `uv` để đồng bộ môi trường theo `uv.lock`
+- `uv` is recommended for lockfile-based dependency sync
 
-## Cài đặt
+### Install Dependencies
 
-### Cách 1 (khuyến nghị): dùng `uv`
+Option 1 (recommended):
 
 ```bash
 uv sync
 ```
 
-### Cách 2: dùng `pip` (tối thiểu)
+Option 2 (minimal):
 
 ```bash
 pip install fastapi uvicorn httpx langchain-core langgraph pinecone "psycopg[binary]" pydantic pydantic-settings redis pytest ruff
 ```
 
-## Cấu hình môi trường
+### Environment Configuration
 
-Ứng dụng đọc biến môi trường từ file `.env` (xem `config/settings.py`).
-
-Tạo file `.env` ở thư mục gốc:
+Create a `.env` file in the project root:
 
 ```env
 APP_NAME=AI Recruitment Agent
@@ -62,85 +111,95 @@ PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_INDEX=ai-recruitment
 ```
 
-Lưu ý:
+Notes:
 
-- Nếu không có `GEMINI_API_KEY`, hệ thống vẫn chạy nhưng câu trả lời sẽ fallback.
-- Redis/Postgres/Pinecone hiện mới ở mức cấu hình/chuẩn bị kết nối; `rag_retriever` đang trả dữ liệu mẫu.
+- The app can still run without `GEMINI_API_KEY` using fallback responses.
+- `POSTGRES_DSN` is required for real data crawling and retrieval workflows.
 
-## Chạy ứng dụng
-
-### Chạy backend
+### Run the Backend
 
 ```bash
 python -m app.main
 ```
 
-Backend mặc định chạy tại: `http://localhost:8000`
+Default backend URL: `http://localhost:8000`.
 
-### Mở giao diện chat
+### Load Jobs into PostgreSQL
 
-- Truy cập: `http://localhost:8000/chatbot`
+```bash
+python -m app.tools.crawl
+```
 
-## API
+The crawler will:
 
-### 1) Health check
+- Create the `jobs` table if it does not exist.
+- Fetch job data from the Remotive API.
+- Upsert records using `(source, source_id)` as the unique key.
+
+### Open the Web UI
+
+- Visit `http://localhost:8000/chatbot`.
+
+## 6) Key API Endpoints
+
+### Health Check
 
 `GET /health`
 
-Ví dụ response:
+Example response:
 
 ```json
 {"status":"ok","env":"dev"}
 ```
 
-### 2) Chat (POST)
+### Chat (POST)
 
 `POST /api/chat`
 
-Body mẫu:
+Example request body:
 
 ```json
 {
   "session_id": "browser-session",
-  "message": "Tim viec AI Engineer luong 20-30 trieu tai HCM"
+  "message": "Find AI Engineer jobs in Ho Chi Minh City with salary 20-30 million VND"
 }
 ```
 
-### 3) Chat (GET)
+### Chat (GET)
 
-`GET /api/chat?session_id=browser-session&message=Tim+viec+Data+Scientist+luong+25-35+trieu`
+`GET /api/chat?session_id=browser-session&message=Find+Data+Scientist+jobs+salary+25-35+million`
 
-## Chạy test
+## 7) Testing
+
+Run tests with:
 
 ```bash
 pytest
 ```
 
-Các test hiện có:
+Current test coverage includes:
 
-- API endpoint (`tests/test_api.py`)
-- Flow graph (`tests/test_graph.py`)
+- `tests/test_api.py`: API endpoint behavior.
+- `tests/test_graph.py`: graph flow and node pipeline logic.
 
-## Cấu trúc thư mục chính
+## 8) Current Status and Limitations
 
-```text
-app/
-  api/            # Router + dependency
-  graph/          # StateGraph và các node xử lý
-  llm/            # Gemini client
-  memory/         # Session state in-memory
-  prompts/        # Prompt templates
-  db/             # Helper lấy DSN/URL
-config/
-  settings.py     # Cấu hình từ môi trường
-frontend/         # index.html, app.js, styles.css
-tests/            # Unit tests
-```
+### Completed
 
-## Hướng phát triển tiếp
+- Implemented a modular graph-based conversational architecture.
+- Connected job ingestion and filtered retrieval workflows.
+- Delivered a working UI for demonstration.
 
-- Thay `rag_retriever` placeholder bằng truy vấn Pinecone thực tế + reranker.
-- Chuyển `memory.store` từ in-memory sang Redis để scale nhiều worker.
-- Tăng độ robust cho parser salary đa định dạng (USD, gross/net, shorthand nâng cao).
-- Bổ sung test integration cho luồng có gọi Gemini API (mock HTTP).
+### Limitations
+
+- Semantic vector indexing/retrieval with Pinecone is not fully implemented yet.
+- Session memory is currently in-memory and not optimized for multi-worker deployment.
+- Job ranking does not yet use a high-quality reranker.
+
+## 9) Future Improvements
+
+- Complete semantic retrieval pipeline (embeddings + Pinecone + reranker).
+- Move session storage to Redis for production scalability.
+- Extend salary parsing for more formats (USD, gross/net, shorthand).
+- Add integration tests for flows involving both LLM and database operations.
 
