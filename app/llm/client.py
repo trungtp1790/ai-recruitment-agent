@@ -25,7 +25,8 @@ class GeminiClient:
             if isinstance(parsed, dict):
                 return parsed
         except json.JSONDecodeError:
-            pass
+            # Fall back to extracting the first JSON-like object from text.
+            ...
         match = re.search(r"\{[\s\S]*\}", clean)
         if not match:
             return {}
@@ -59,7 +60,7 @@ class GeminiClient:
             if not parts:
                 return ""
             return parts[0].get("text", "") or ""
-        except Exception:
+        except (httpx.HTTPError, KeyError, ValueError, TypeError):
             return ""
 
     def classify(self, prompt: str, text: str) -> str:

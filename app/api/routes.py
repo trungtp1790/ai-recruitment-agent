@@ -33,7 +33,7 @@ def chat(req: ChatRequest, graph=Depends(get_recruitment_graph)):
 @router.get("/chat")
 def chat_get(
     session_id: str = Query(default="browser-session"),
-    message: str = Query(default="Tim viec AI Engineer luong 20-30 trieu"),
+    message: str = Query(default="Find AI Engineer jobs with salary 20-30 million VND"),
     graph=Depends(get_recruitment_graph),
 ):
     return _run_chat(session_id, message, graph)

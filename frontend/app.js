@@ -12,7 +12,7 @@ function addMessage(text, role) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-addMessage('Xin chào! Hãy mô tả công việc bạn muốn tìm, ví dụ: AI Engineer lương 20-30 triệu tại HCM.', 'bot');
+addMessage('Hi! Describe your target role, for example: AI Engineer in Ho Chi Minh City with 20-30 million VND salary.', 'bot');
 
 chatForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -34,8 +34,8 @@ chatForm.addEventListener('submit', async (event) => {
     }
 
     const payload = await response.json();
-    addMessage(payload.response || 'Không có phản hồi từ hệ thống.', 'bot');
+    addMessage(payload.response || 'No response returned from the system.', 'bot');
   } catch (error) {
-    addMessage(`Có lỗi xảy ra: ${error.message}`, 'bot');
+    addMessage(`An error occurred: ${error.message}`, 'bot');
   }
 });

@@ -7,5 +7,5 @@ def index_jobs(jobs: list[dict]) -> int:
     return len(jobs)
 
 
-def refresh_job_database(limit: int = 300) -> dict[str, int]:
+def refresh_job_database(limit: int = 300) -> dict[str, int | str]:
     return crawl_and_store_jobs(limit=limit)

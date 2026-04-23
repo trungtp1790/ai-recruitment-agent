@@ -11,12 +11,12 @@ def _to_vnd(million: int) -> int:
 
 def _parse_salary_from_query(query: str) -> SalarySchema:
     text = query.lower()
-    range_match = re.search(r"(\d{1,3})\s*[-~]\s*(\d{1,3})", text)
+    range_match = re.search(r"(\d{1,3})\s*[-~]\s*(\d{1,3})\s*(tr|triệu|m|million|mio)?", text)
     if range_match:
         min_m, max_m = int(range_match.group(1)), int(range_match.group(2))
         return {"min_value": _to_vnd(min_m), "max_value": _to_vnd(max_m), "currency": "VND"}
 
-    single_match = re.search(r"(\d{1,3})\s*(tr|triệu|cu|củ)?", text)
+    single_match = re.search(r"(\d{1,3})\s*(tr|triệu|m|million|mio)\b", text)
     if single_match:
         val = _to_vnd(int(single_match.group(1)))
         return {"min_value": val, "max_value": val, "currency": "VND"}
