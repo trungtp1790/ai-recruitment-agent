@@ -59,10 +59,10 @@ def crawl_jobs(limit: int = 300) -> list[dict[str, Any]]:
         with httpx.Client(timeout=30.0) as client:
             resp = client.get(REMOTIVE_API_URL)
             resp.raise_for_status()
+        data = resp.json()
     except Exception:
         return []
 
-    data = resp.json()
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     normalized = [_normalize_job(job) for job in jobs if isinstance(job, dict)]
     # Keep newest first to favor fresh postings.
