@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import dataclass
 
 import httpx
@@ -69,13 +70,14 @@ class GeminiClient:
             return content
 
         lowered = text.lower()
-        if any(word in lowered for word in ("job", "viec", "tuyen", "luong")):
+        normalized = _strip_diacritics(lowered)
+        if _looks_like_job_search(lowered, normalized):
             return "job_search"
-        if "so sanh" in lowered:
+        if "so sanh" in normalized:
             return "job_compare"
-        if "ban la ai" in lowered:
+        if "ban la ai" in normalized:
             return "identity_query"
-        if any(word in lowered for word in ("hello", "hi", "xin chao")):
+        if any(word in normalized for word in ("hello", "hi", "xin chao")):
             return "chitchat"
         return "out_of_scope"
 
@@ -100,3 +102,122 @@ def get_gemini_client() -> GeminiClient:
         flash_model=settings.gemini_flash_model,
         pro_model=settings.gemini_pro_model,
     )
+
+
+def _strip_diacritics(text: str) -> str:
+    return "".join(
+        char for char in unicodedata.normalize("NFKD", text) if not unicodedata.combining(char)
+    ).replace("đ", "d").replace("Đ", "D")
+
+
+def _looks_like_job_search(lowered: str, normalized: str) -> bool:
+    job_keywords = (
+        "job",
+        "jobs",
+        "position",
+        "role",
+        "salary",
+        "tim viec",
+        "viec",
+        "tuyen",
+        "luong",
+        "muc luong",
+        "cong viec",
+    )
+    if any(keyword in normalized for keyword in job_keywords):
+        return True
+
+    role_keywords = (
+        "engineer",
+        "developer",
+        "scientist",
+        "analyst",
+        "analytics",
+        "data analytics",
+        "product manager",
+        "business analyst",
+        "qa",
+        "tester",
+        "devops",
+        "ui ux",
+        "designer",
+        "mechanical engineer",
+        "procurement",
+        "legal",
+        "administrative",
+        "admin",
+        "content creator",
+        "architect",
+        "intern",
+        "manager",
+        "accountant",
+        "accounting",
+        "sales",
+        "marketing",
+        "hr",
+        "recruiter",
+        "teacher",
+        "nurse",
+        "pharmacist",
+        "doctor",
+        "customer service",
+        "operation",
+        "logistics",
+        "finance",
+        "ke toan",
+        "nhan su",
+        "ban hang",
+        "tiep thi",
+        "giao vien",
+        "y ta",
+        "bac si",
+        "duoc si",
+        "cham soc khach hang",
+        "van hanh",
+        "thu mua",
+        "phap che",
+        "hanh chinh",
+        "co khi",
+        "noi dung",
+    )
+    if any(keyword in normalized for keyword in role_keywords):
+        return True
+
+    if re.search(r"\b(ai|ml|data)\s+(engineer|scientist|analyst)\b", normalized):
+        return True
+    if re.search(r"\bdata\s+analytics\b", normalized):
+        return True
+
+    # Query that only contains role + location is still a job search.
+    location_tokens = ("hcm", "ho chi minh", "ha noi", "hanoi", "da nang", "remote", "vietnam")
+    if any(token in normalized for token in location_tokens) and any(
+        token in normalized
+        for token in (
+            "engineer",
+            "scientist",
+            "developer",
+            "accountant",
+            "analytics",
+            "data analytics",
+            "sales",
+            "marketing",
+            "teacher",
+            "nurse",
+            "recruiter",
+            "ke toan",
+            "ban hang",
+            "giao vien",
+            "nhan su",
+        )
+    ):
+        return True
+
+    # Treat salary range expressions as a strong job-search signal.
+    if re.search(r"\b\d{1,3}\s*[-~]\s*\d{1,3}\s*(tr|trieu|m|million|mio|vnd)?\b", normalized):
+        return True
+    if re.search(r"\b\d{1,3}\s*(tr|trieu|m|million|mio)\b", normalized):
+        return True
+    if "vnd" in lowered and re.search(r"\b\d{1,3}\b", lowered):
+        return True
+
+    return False

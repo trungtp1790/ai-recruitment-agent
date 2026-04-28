@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     postgres_dsn: str = "postgresql://postgres:postgres@localhost:5432/recruitment"
     pinecone_api_key: str = ""
     pinecone_index: str = "ai-recruitment"
+    crawl_sources: str = "linkedin,itviec,topcv,remotive,arbeitnow"
+    legal_jobs_import_dir: str = ""
+    adzuna_app_id: str = ""
+    adzuna_app_key: str = ""
+    adzuna_country: str = "vn"
 
     model_config = SettingsConfigDict(
         env_file=".env",

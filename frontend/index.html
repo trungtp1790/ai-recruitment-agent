@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,18 +7,33 @@
   <link rel="stylesheet" href="/frontend/styles.css" />
 </head>
 <body>
-  <main class="app">
-    <header class="app-header">
-      <h1>AI Recruitment Agent</h1>
-      <p>Smart assistant for job search and recruitment support</p>
-    </header>
+  <main class="shell">
+    <section class="app">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">AI</div>
+          <div>
+            <h1>AI Recruitment Agent</h1>
+            <p>Professional assistant for job search and talent matching</p>
+          </div>
+        </div>
+      </header>
 
-    <section id="chat-window" class="chat-window" aria-live="polite"></section>
+      <section id="chat-window" class="chat-window" aria-live="polite"></section>
 
-    <form id="chat-form" class="chat-form">
-      <input id="message-input" name="message" type="text" placeholder="Describe your target job..." required />
-      <button type="submit">Send</button>
-    </form>
+      <form id="chat-form" class="chat-form">
+        <div class="composer">
+          <input
+            id="message-input"
+            name="message"
+            type="text"
+            placeholder="Ask for jobs by role, location, salary, or experience..."
+            required
+          />
+        </div>
+        <button type="submit" id="send-button">Send</button>
+      </form>
+    </section>
   </main>
 
   <script src="/frontend/app.js"></script>

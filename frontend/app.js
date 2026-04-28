@@ -1,6 +1,7 @@
-﻿const chatWindow = document.getElementById('chat-window');
+const chatWindow = document.getElementById('chat-window');
 const chatForm = document.getElementById('chat-form');
 const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
 
 const sessionId = `browser-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -12,7 +13,20 @@ function addMessage(text, role) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-addMessage('Hi! Describe your target role, for example: AI Engineer in Ho Chi Minh City with 20-30 million VND salary.', 'bot');
+function setSendingState(isSending) {
+  sendButton.disabled = isSending;
+  messageInput.disabled = isSending;
+  if (isSending) {
+    sendButton.textContent = 'Sending...';
+  } else {
+    sendButton.textContent = 'Send';
+  }
+}
+
+addMessage(
+  'Hi! Describe your target role, for example: AI Engineer in Ho Chi Minh City with 20-30 million VND salary.',
+  'bot',
+);
 
 chatForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -21,6 +35,7 @@ chatForm.addEventListener('submit', async (event) => {
 
   addMessage(message, 'user');
   messageInput.value = '';
+  setSendingState(true);
 
   try {
     const response = await fetch('/api/chat', {
@@ -37,5 +52,8 @@ chatForm.addEventListener('submit', async (event) => {
     addMessage(payload.response || 'No response returned from the system.', 'bot');
   } catch (error) {
     addMessage(`An error occurred: ${error.message}`, 'bot');
+  } finally {
+    setSendingState(false);
+    messageInput.focus();
   }
 });

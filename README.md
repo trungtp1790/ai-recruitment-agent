@@ -90,7 +90,7 @@ uv sync
 Option 2 (minimal):
 
 ```bash
-pip install fastapi uvicorn httpx langchain-core langgraph pinecone "psycopg[binary]" pydantic pydantic-settings redis pytest ruff
+pip install fastapi uvicorn httpx beautifulsoup4 langchain-core langgraph pinecone "psycopg[binary]" pydantic pydantic-settings redis pytest ruff
 ```
 
 ### Environment Configuration
@@ -109,6 +109,26 @@ REDIS_URL=redis://localhost:6379/0
 POSTGRES_DSN=postgresql://postgres:postgres@localhost:5432/recruitment
 PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_INDEX=ai-recruitment
+
+# Crawl sources (comma-separated)
+CRAWL_SOURCES=linkedin,itviec,topcv,remotive,arbeitnow,import
+
+# Optional: official Adzuna API credentials for Vietnam-focused jobs
+ADZUNA_APP_ID=
+ADZUNA_APP_KEY=
+ADZUNA_COUNTRY=vn
+
+# Optional keywords used by LinkedIn guest jobs endpoint
+LINKEDIN_KEYWORDS=AI Engineer
+LINKEDIN_LOCATION=Vietnam
+
+# Optional pagination for HTML crawlers
+TOPCV_MAX_PAGES=3
+ITVIEC_MAX_PAGES=3
+
+# Optional: directory containing legal CSV/JSON exports from job platforms
+# Example: exports from LinkedIn/ITViec/TopCV that you have permission to use
+LEGAL_JOBS_IMPORT_DIR=
 ```
 
 Notes:
@@ -133,8 +153,46 @@ python -m app.tools.crawl
 The crawler will:
 
 - Create the `jobs` table if it does not exist.
-- Fetch job data from the Remotive API.
+- Fetch job data from configured sources (`CRAWL_SOURCES`).
+- Support direct crawl connectors (`linkedin`, `itviec`, `topcv`) and public APIs (`remotive`, `arbeitnow`).
+- Support official API connectors (`adzuna` with key).
+- Support importing legal CSV/JSON exports via `LEGAL_JOBS_IMPORT_DIR`.
 - Upsert records using `(source, source_id)` as the unique key.
+
+Import file naming notes:
+
+- Name files with a source prefix for better source tracking (for example: `linkedin_jobs.csv`, `itviec_export.json`, `topcv_2026_04.csv`).
+- The crawler auto-detects known source prefixes: `linkedin`, `itviec`, `topcv`, `vietnamworks`, `careerbuilder`, `glints`.
+- Import rows are validated; invalid rows (missing title or both URL and description) are skipped.
+
+### Import Legal Export Files Only
+
+If some websites block crawlers (for example `403`), you can import your legal CSV/JSON exports directly:
+
+```bash
+python -m app.tools.import_jobs
+```
+
+Optional env:
+
+```env
+IMPORT_LIMIT=5000
+```
+
+### Generate Large Fake Vietnam Dataset (Demo)
+
+To quickly create a bigger multi-industry dataset for demos:
+
+```bash
+python -m app.tools.generate_fake_jobs --rows 900
+python -m app.tools.import_jobs
+```
+
+This command rewrites:
+
+- `legal-imports/linkedin_jobs.csv`
+- `legal-imports/itviec_jobs.csv`
+- `legal-imports/topcv_jobs.csv`
 
 ### Open the Web UI
 
