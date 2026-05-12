@@ -1,5 +1,16 @@
+import pytest
+
 from app.graph.graph import build_recruitment_graph
 from app.graph.nodes.responder import _build_job_list_response
+
+
+def test_split_compare_roles_vietnamese_va():
+    from app.graph.nodes.entity_extractor import _split_compare_roles
+
+    left_right = _split_compare_roles("So sánh AI Engineer và Data Scientist tại Việt Nam")
+    assert len(left_right) == 2
+    assert "engineer" in left_right[0].lower()
+    assert "scientist" in left_right[1].lower()
 
 
 def test_graph_job_search_flow():
@@ -17,6 +28,14 @@ def test_graph_has_out_of_scope_fallback():
     result = graph.invoke({"session_id": "s2", "user_query": "thoi tiet hom nay the nao", "entities": {}})
     assert result["intent"] in {"out_of_scope", "chitchat"}
     assert "response" in result
+
+
+def test_parse_salary_accepts_unicode_en_dash():
+    from app.graph.nodes.salary_parser import _parse_salary_from_query
+
+    parsed = _parse_salary_from_query("Kế toán tại Hà Nội, lương 15\u201322 triệu")
+    assert parsed["min_value"] == 15_000_000
+    assert parsed["max_value"] == 22_000_000
 
 
 def test_graph_job_search_with_vietnamese_accents():
@@ -106,6 +125,53 @@ def test_graph_follow_up_keeps_previous_position_memory():
     assert second["intent"] == "job_search"
     assert any("ai engineer" in item.lower() for item in second["entities"]["position"])
     assert "Hanoi" in second["entities"]["location"]
+
+
+def test_graph_job_compare_returns_comparison(monkeypatch: pytest.MonkeyPatch):
+    from app.graph.nodes import rag_retriever
+
+    def two_jobs(
+        positions: list[str],
+        locations: list[str],
+        skills: list[str],
+        salary_min: int | None,
+        salary_max: int | None,
+        limit: int,
+    ) -> list[dict]:
+        return [
+            {
+                "title": "AI Engineer",
+                "company_name": "CoA",
+                "location": "Hanoi",
+                "description": "python ml",
+                "experience": "1-2 years",
+                "salary_min": 20_000_000,
+                "salary_max": 35_000_000,
+            },
+            {
+                "title": "Data Scientist",
+                "company_name": "CoB",
+                "location": "Ho Chi Minh City",
+                "description": "sql",
+                "experience": "2-3 years",
+                "salary_min": 25_000_000,
+                "salary_max": 40_000_000,
+            },
+        ]
+
+    monkeypatch.setattr(rag_retriever, "_query_jobs_from_db", two_jobs)
+    graph = build_recruitment_graph()
+    result = graph.invoke(
+        {
+            "session_id": "cmp1",
+            "user_query": "So sanh AI Engineer va Data Scientist tai Viet Nam",
+            "entities": {},
+        }
+    )
+    assert result["intent"] == "job_compare"
+    text = result["response"].lower()
+    assert "ai engineer" in text
+    assert "data scientist" in text
 
 
 def test_build_job_list_response_includes_company_when_available():

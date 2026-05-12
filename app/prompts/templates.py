@@ -25,3 +25,10 @@ Return JSON only with:
 - max_value: int | null
 - currency: "VND"
 """.strip()
+
+JOB_COMPARE_PROMPT = """
+You compare two job postings for a candidate. Be factual, concise, and structured.
+Use the user's language (Vietnamese if the user wrote Vietnamese, otherwise English).
+Cover: role title, company, location, salary range, experience, and one sentence on which role fits whom.
+Do not invent facts beyond the provided job fields.
+""".strip()

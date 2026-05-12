@@ -1,4 +1,29 @@
-from app.graph.nodes.rag_retriever import _enforce_experience_hard_rule, _job_matches_experience, _rank_jobs
+from app.graph.nodes.rag_retriever import (
+    _enforce_experience_hard_rule,
+    _expand_position_terms,
+    _job_matches_experience,
+    _rank_jobs,
+)
+
+
+def test_expand_ketoan_includes_accountant_synonyms():
+    terms = _expand_position_terms("Kế toán")
+    blob = " ".join(t.lower() for t in terms)
+    assert "accountant" in blob or "accounting" in blob
+
+
+def test_expand_data_scientist_does_not_add_machine_learning_synonym():
+    from app.graph.nodes.rag_retriever import _expand_position_terms, _title_matches_position
+
+    terms = _expand_position_terms("Data Scientist")
+    blob = " ".join(t.lower() for t in terms)
+    assert "machine learning" not in blob
+
+    ai_job = {"title": "Senior AI Engineer", "description": "machine learning pytorch"}
+    assert not _title_matches_position(ai_job, "Data Scientist")
+
+    ds_job = {"title": "Senior Data Scientist", "description": "sql"}
+    assert _title_matches_position(ds_job, "Data Scientist")
 
 
 def test_rank_jobs_prefers_requested_location_and_role():

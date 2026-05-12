@@ -3,39 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Recruitment Chatbot</title>
-  <link rel="stylesheet" href="/frontend/styles.css" />
+  <title>AI Recruitment Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/frontend/styles.css?v=20260212" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 </head>
 <body>
-  <main class="shell">
-    <section class="app">
-      <header class="app-header">
-        <div class="brand">
-          <div class="brand-icon" aria-hidden="true">AI</div>
-          <div>
-            <h1>AI Recruitment Agent</h1>
-            <p>Professional assistant for job search and talent matching</p>
-          </div>
+  <div class="page">
+    <header class="top-nav">
+      <div class="nav-brand">
+        <span class="nav-logo" aria-hidden="true">RA</span>
+        <div class="nav-titles">
+          <span class="nav-name">Recruitment Agent</span>
+          <span class="nav-tag">LangGraph · Gemini</span>
         </div>
-      </header>
+      </div>
+      <a class="nav-cta" href="/health" target="_blank" rel="noopener">API health</a>
+    </header>
 
-      <section id="chat-window" class="chat-window" aria-live="polite"></section>
-
-      <form id="chat-form" class="chat-form">
-        <div class="composer">
-          <input
-            id="message-input"
-            name="message"
-            type="text"
-            placeholder="Ask for jobs by role, location, salary, or experience..."
-            required
-          />
-        </div>
-        <button type="submit" id="send-button">Send</button>
-      </form>
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="hero-eyebrow">Course demo · AI hiring assistant</p>
+      <h1 id="hero-title" class="hero-title">Your AI career agent</h1>
+      <p class="hero-lead">
+        Finds roles that match what you ask for, keeps your session context across turns, and compares
+        positions when you need a side-by-side view.
+      </p>
+      <p class="hero-prompt" id="hero-prompt">Not sure where to start? Show me…</p>
+      <div class="suggestion-row" id="suggestion-chips" role="group" aria-label="Example prompts">
+        <button type="button" class="chip" data-message="AI Engineer in Ho Chi Minh City, salary 20–30 million VND">
+          AI Engineer in Ho Chi Minh City, 20–30M VND
+        </button>
+        <button type="button" class="chip" data-message="Data Scientist remote Vietnam, Python and SQL">
+          Data Scientist · Remote Vietnam
+        </button>
+        <button type="button" class="chip" data-message="So sánh AI Engineer và Data Scientist tại Việt Nam">
+          So sánh AI Engineer và Data Scientist
+        </button>
+        <button type="button" class="chip" data-message="Kế toán tại Hà Nội, lương 15–22 triệu">
+          Kế toán tại Hà Nội
+        </button>
+      </div>
     </section>
-  </main>
 
-  <script src="/frontend/app.js"></script>
+    <main class="chat-shell">
+      <section class="chat-card" aria-label="Chat with the recruitment agent">
+        <div class="chat-card-head">
+          <div>
+            <h2 class="chat-card-title">Chat with your agent</h2>
+            <p class="chat-card-sub">Natural language search, follow-ups, and role comparison in one thread.</p>
+          </div>
+          <span class="live-pill" title="Session is stored in this browser tab">Session active</span>
+        </div>
+
+        <div id="chat-window" class="chat-window" aria-live="polite"></div>
+
+        <form id="chat-form" class="chat-form" autocomplete="off">
+          <label class="sr-only" for="message-input">Your message</label>
+          <div class="composer">
+            <input
+              id="message-input"
+              name="message"
+              type="text"
+              placeholder="Describe role, city, salary, skills, or ask to compare two roles…"
+              required
+            />
+          </div>
+          <button type="submit" id="send-button" class="send-btn">
+            <span class="send-label">Send</span>
+            <span class="send-icon" aria-hidden="true">→</span>
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <section class="how" aria-labelledby="how-title">
+      <h2 id="how-title" class="how-title">How it works</h2>
+      <ul class="how-grid">
+        <li>
+          <span class="how-icon" aria-hidden="true">①</span>
+          <strong>Understands intent</strong>
+          <span>Search, compare, or small talk—routed in a LangGraph pipeline.</span>
+        </li>
+        <li>
+          <span class="how-icon" aria-hidden="true">②</span>
+          <strong>Extracts details</strong>
+          <span>Role, location, salary, and skills normalized for database filters.</span>
+        </li>
+        <li>
+          <span class="how-icon" aria-hidden="true">③</span>
+          <strong>Answers clearly</strong>
+          <span>Ranked job snippets plus conversational replies powered by Gemini when configured.</span>
+        </li>
+      </ul>
+      <p class="how-footnote">
+        Inspired by the conversational hiring experience on
+        <a href="https://www.hiringagents.ai/" rel="noopener noreferrer" target="_blank">HiringAgents.ai</a>
+        — adapted for this academy demo.
+      </p>
+    </section>
+  </div>
+
+  <script src="/frontend/app.js?v=20260212"></script>
 </body>
 </html>

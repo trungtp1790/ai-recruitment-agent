@@ -2,8 +2,7 @@ from app.tools.crawl import crawl_and_store_jobs
 
 
 def index_jobs(jobs: list[dict]) -> int:
-    # Placeholder: currently "indexing" means persisting to Postgres for retrieval.
-    # This keeps function compatibility while Pinecone indexing is not wired yet.
+    # Placeholder for future vector indexing; jobs are persisted via crawl/import to Postgres.
     return len(jobs)
 
 

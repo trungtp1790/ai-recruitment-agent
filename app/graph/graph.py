@@ -10,7 +10,7 @@ from app.graph.state import RecruitmentState
 
 def _route_by_intent(state: RecruitmentState) -> str:
     intent = state.get("intent", "out_of_scope")
-    if intent == "job_search":
+    if intent in ("job_search", "job_compare"):
         return "entity_extractor"
     return "responder"
 

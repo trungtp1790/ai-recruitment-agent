@@ -31,6 +31,33 @@ VIETNAM_LOCATIONS = [
     "Binh Duong",
     "Bac Ninh",
     "Dong Nai",
+    "Long An",
+    "Hung Yen",
+    "Quang Ninh",
+    "Thanh Hoa",
+    "Nghe An",
+    "Hai Duong",
+    "Nam Dinh",
+    "Thai Nguyen",
+    "Vinh Phuc",
+    "Hue",
+    "Quang Nam",
+    "Quang Ngai",
+    "Binh Dinh",
+    "Phu Yen",
+    "Khanh Hoa",
+    "Lam Dong",
+    "Binh Thuan",
+    "Ba Ria - Vung Tau",
+    "Tien Giang",
+    "Kien Giang",
+    "An Giang",
+    "Ca Mau",
+    "Quy Nhon",
+    "Nha Trang",
+    "Da Lat",
+    "Phan Thiet",
+    "Vung Tau",
 ]
 
 ROLES = [
@@ -40,6 +67,7 @@ ROLES = [
     ("QA Engineer", "Technology", ["qa", "testing", "automation"]),
     ("DevOps Engineer", "Technology", ["devops", "kubernetes", "cloud"]),
     ("Data Analyst", "Data", ["analytics", "sql", "bi"]),
+    ("Data Scientist", "Data", ["python", "ml", "statistics", "sql"]),
     ("Accountant", "Finance", ["accounting", "excel", "tax"]),
     ("Finance Analyst", "Finance", ["finance", "analysis", "reporting"]),
     ("Sales Executive", "Sales", ["sales", "negotiation", "crm"]),
@@ -63,6 +91,7 @@ LINKEDIN_TOPCV_ROLES = [
     ("Sales Executive", "Sales", ["sales", "negotiation", "crm"]),
     ("Business Development Manager", "Sales", ["business-development", "b2b", "pipeline"]),
     ("Marketing Specialist", "Marketing", ["marketing", "campaign", "digital"]),
+    ("Data Scientist", "Data", ["python", "ml", "statistics", "sql"]),
     ("PR Executive", "Marketing", ["pr", "communications", "media"]),
     ("HR Executive", "Human Resources", ["hr", "recruitment", "onboarding"]),
     ("Administrative Officer", "Administration", ["admin", "office", "coordination"]),
@@ -86,6 +115,7 @@ ITVIEC_TECH_ROLES = [
     ("QA Engineer", "Technology", ["qa", "testing", "automation"]),
     ("DevOps Engineer", "Technology", ["devops", "kubernetes", "cloud"]),
     ("Data Analyst", "Data", ["analytics", "sql", "bi"]),
+    ("Data Scientist", "Data", ["python", "ml", "statistics", "sql"]),
     ("Product Manager", "Technology", ["product", "roadmap", "agile"]),
     ("UI UX Designer", "Technology", ["uiux", "figma", "design"]),
 ]
@@ -107,6 +137,52 @@ COMPANY_PREFIX = [
     "MinhLong",
     "Sunrise",
     "GlobalNext",
+    "MekongSoft",
+    "EastBridge",
+    "LotusWave",
+    "RedRiver",
+    "SaigonPrime",
+    "HanoiCore",
+    "BlueLotus",
+    "VinaSpark",
+    "OceanByte",
+    "ZenithWorks",
+    "AuroraLabs",
+    "NexusPoint",
+    "FutureScale",
+    "RiverStone",
+    "NorthStar",
+    "SilverMaple",
+    "VertexOne",
+    "CloudNova",
+    "DeltaEdge",
+    "VietBridge",
+]
+
+IT_COMPANY_SUFFIX = [
+    "Tech",
+    "Software",
+    "Digital",
+    "Cloud",
+    "Systems",
+    "Labs",
+    "Solutions",
+    "Platform",
+    "AI",
+    "Data",
+]
+
+CORP_COMPANY_SUFFIX = [
+    "JSC",
+    "Group",
+    "Solutions",
+    "Vietnam",
+    "Corporation",
+    "Holdings",
+    "Enterprises",
+    "Industries",
+    "Partners",
+    "Global",
 ]
 
 JOB_TYPES = ["Full-time", "Hybrid", "Remote", "Shift", "Part-time"]
@@ -120,6 +196,33 @@ LOCATION_SALARY_MULTIPLIER = {
     "Binh Duong": 0.98,
     "Bac Ninh": 0.96,
     "Dong Nai": 0.95,
+    "Long An": 0.94,
+    "Hung Yen": 0.95,
+    "Quang Ninh": 0.98,
+    "Thanh Hoa": 0.92,
+    "Nghe An": 0.91,
+    "Hai Duong": 0.94,
+    "Nam Dinh": 0.90,
+    "Thai Nguyen": 0.93,
+    "Vinh Phuc": 0.95,
+    "Hue": 0.93,
+    "Quang Nam": 0.92,
+    "Quang Ngai": 0.90,
+    "Binh Dinh": 0.92,
+    "Phu Yen": 0.90,
+    "Khanh Hoa": 0.96,
+    "Lam Dong": 0.92,
+    "Binh Thuan": 0.91,
+    "Ba Ria - Vung Tau": 0.99,
+    "Tien Giang": 0.90,
+    "Kien Giang": 0.90,
+    "An Giang": 0.89,
+    "Ca Mau": 0.88,
+    "Quy Nhon": 0.92,
+    "Nha Trang": 0.96,
+    "Da Lat": 0.92,
+    "Phan Thiet": 0.91,
+    "Vung Tau": 0.99,
 }
 
 
@@ -268,9 +371,9 @@ def _build_row(index: int, source: str) -> dict[str, str | int]:
     experience = random.choice(EXPERIENCE_BANDS)
     salary_min, salary_max = _salary_range(category, experience, location)
     if source == "itviec":
-        company = f"{random.choice(COMPANY_PREFIX)} {random.choice(['Tech', 'Software', 'Digital', 'Cloud'])}"
+        company = f"{random.choice(COMPANY_PREFIX)} {random.choice(IT_COMPANY_SUFFIX)}"
     else:
-        company = f"{random.choice(COMPANY_PREFIX)} {random.choice(['JSC', 'Group', 'Solutions', 'Vietnam'])}"
+        company = f"{random.choice(COMPANY_PREFIX)} {random.choice(CORP_COMPANY_SUFFIX)}"
     posted_at = datetime.now() - timedelta(days=random.randint(0, 45), hours=random.randint(0, 23))
     slug = role.lower().replace(" ", "-")
     return {

@@ -21,7 +21,7 @@ def test_chatbot_ui_page():
     client = TestClient(app)
     response = client.get("/chatbot")
     assert response.status_code == 200
-    assert "AI Recruitment Agent" in response.text
+    assert "Your AI career agent" in response.text
 
 
 def test_chat_endpoint():

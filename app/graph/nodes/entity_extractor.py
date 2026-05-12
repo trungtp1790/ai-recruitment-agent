@@ -144,6 +144,34 @@ def _infer_locations(query: str) -> list[str]:
     return []
 
 
+def _infer_skills(query: str) -> list[str]:
+    """Lightweight skill tokens from the user text (used when the LLM returns no skills)."""
+    n = " " + " ".join(_strip_diacritics(query.lower()).split()) + " "
+    patterns: list[tuple[str, str]] = (
+        (r"\bpython\b", "Python"),
+        (r"\bsql\b", "SQL"),
+        (r"(?:^|\s)r(?:\s|$)", "R"),
+        (r"\bscala\b", "Scala"),
+        (r"\bjava\b", "Java"),
+        (r"\bspark\b", "Spark"),
+        (r"\bhadoop\b", "Hadoop"),
+        (r"\bkubernetes\b", "Kubernetes"),
+        (r"\bdocker\b", "Docker"),
+        (r"\bpytorch\b", "PyTorch"),
+        (r"\btensorflow\b", "TensorFlow"),
+        (r"\baws\b", "AWS"),
+        (r"\bgcp\b", "GCP"),
+        (r"\bazure\b", "Azure"),
+        (r"\breact\b", "React"),
+        (r"\bnode\.?js\b", "Node.js"),
+    )
+    out: list[str] = []
+    for pat, label in patterns:
+        if re.search(pat, n, flags=re.IGNORECASE) and label not in out:
+            out.append(label)
+    return out
+
+
 def _infer_experience_years(query: str) -> int | None:
     normalized = _strip_diacritics(query.lower())
 
@@ -166,8 +194,46 @@ def _infer_experience_years(query: str) -> int | None:
     return None
 
 
+def _split_compare_roles(query: str) -> list[str]:
+    """Parse two role titles from compare-style queries (Vietnamese / English)."""
+    normalized = _strip_diacritics(query.lower()).strip()
+    normalized = re.sub(r"^(compare|so sanh)\s+", "", normalized).strip()
+    m = re.match(r"^(.+?)\s+(?:va|and|vs)\s+(.+)$", normalized)
+    if not m:
+        return []
+    left = m.group(1).strip()
+    right = m.group(2).strip()
+    left = re.split(r"\s+tai\s+|\s+o\s+|\s+in\s+", left)[0].strip(" ,.;")
+    right = re.split(r"\s+tai\s+|\s+o\s+|\s+in\s+", right)[0].strip(" ,.;")
+    if len(left) < 2 or len(right) < 2:
+        return []
+    return [left, right]
+
+
+def _pretty_role(phrase: str) -> str:
+    cleaned = " ".join(phrase.split())
+    if not cleaned:
+        return cleaned
+    titled = cleaned.title()
+    return (
+        titled.replace(" Ai ", " AI ")
+        .replace("Ai ", "AI ")
+        .replace(" Ml ", " ML ")
+        .replace("Ml ", "ML ")
+        .replace(" Qa ", " QA ")
+        .replace("Qa ", "QA ")
+        .replace(" Ui ", " UI ")
+        .replace("Ui ", "UI ")
+        .replace(" Ux ", " UX ")
+        .replace("Ux ", "UX ")
+        .replace(" It ", " IT ")
+        .replace("It ", "IT ")
+    )
+
+
 def entity_extractor_node(state: RecruitmentState) -> RecruitmentState:
     query = state.get("user_query", "")
+    intent = state.get("intent", "job_search")
     client = get_gemini_client()
     extracted = client.extract_json(ENTITY_EXTRACT_PROMPT, query)
     normalized = {
@@ -177,8 +243,25 @@ def entity_extractor_node(state: RecruitmentState) -> RecruitmentState:
         "level": extracted.get("level"),
         "skills": _to_list(extracted.get("skills")),
     }
-    if not normalized["position"]:
-        normalized["position"] = _infer_positions(query)
+    inferred_pos = _infer_positions(query)
+    if inferred_pos:
+        q_flat = _strip_diacritics(query.lower()).replace(" ", "")
+        if not normalized["position"] or any(
+            _strip_diacritics(p.lower()).replace(" ", "") in q_flat for p in inferred_pos
+        ):
+            normalized["position"] = inferred_pos
+    inferred_loc = _infer_locations(query)
+    if inferred_loc:
+        ql = _strip_diacritics(query.lower())
+        if not normalized["location"] or any(_strip_diacritics(loc.lower()) in ql for loc in inferred_loc):
+            normalized["location"] = inferred_loc
+    skill_hints = _infer_skills(query)
+    if skill_hints:
+        normalized["skills"] = list(dict.fromkeys([*(normalized["skills"] or []), *skill_hints]))
+    if intent == "job_compare":
+        pair = _split_compare_roles(query)
+        if len(pair) >= 2:
+            normalized["position"] = [_pretty_role(pair[0]), _pretty_role(pair[1])]
     if not normalized["location"]:
         normalized["location"] = _infer_locations(query)
     experience_years = _infer_experience_years(query)
@@ -186,6 +269,10 @@ def entity_extractor_node(state: RecruitmentState) -> RecruitmentState:
         normalized["experience_years"] = experience_years
     previous = state.get("entities", {}) or {}
     merged = dict(previous)
+    if intent == "job_compare":
+        merged.pop("position", None)
+        merged.pop("location", None)
+        merged.pop("skills", None)
     # Preserve long-term entity memory: only overwrite list fields when new values exist.
     for key in ("position", "location", "skills"):
         value = normalized.get(key)

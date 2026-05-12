@@ -28,10 +28,11 @@ This project addresses that gap by building a chatbot that can:
 - Chat interface at `http://localhost:8000/chatbot`.
 - Chat API available via `POST /api/chat` and `GET /api/chat`.
 - Intent routing for: `job_search`, `job_compare`, `identity_query`, `out_of_scope`, `chitchat`.
-- Entity extraction and salary normalization into numeric VND values.
-- Job retrieval from PostgreSQL with entity and salary-based filters.
-- Fallback sample data when the database is unavailable or empty.
-- In-memory conversation state management by `session_id`.
+- `LangGraph` pipeline: `job_search` and `job_compare` share `entity_extractor` → `salary_parser` → `rag_retriever` → `responder`; other intents go directly to `responder`.
+- Entity extraction and salary normalization into numeric VND values (with regex fallbacks when the LLM is unavailable).
+- Structured job retrieval from PostgreSQL (keyword filters, progressive query relaxation, and simple in-process ranking).
+- `job_compare`: parses two roles from phrases such as "So sánh A và B" / "Compare A and B", retrieves candidates for both, and answers with an LLM comparison or a deterministic side-by-side summary.
+- Session state keyed by `session_id`: uses **Redis** when `REDIS_URL` is reachable, otherwise **in-memory** (single-process demos).
 
 ## 3) System Architecture
 
@@ -46,11 +47,11 @@ This project addresses that gap by building a chatbot that can:
 ### Chat Processing Flow
 
 1. `intent_router` classifies the user message.
-2. If intent is `job_search`, the system runs:
+2. If intent is `job_search` or `job_compare`, the system runs:
    - `entity_extractor`
    - `salary_parser`
-   - `rag_retriever` (query database, fallback to sample data on failures/no results)
-3. `responder` generates the final conversational reply.
+   - `rag_retriever` (SQL filters over PostgreSQL; ranking only—no vector index in this repo yet)
+3. `responder` generates the final conversational reply (including dedicated compare formatting for `job_compare`).
 
 Application entry point: `app/main.py`.
 
@@ -61,10 +62,10 @@ app/
   api/            # API routes and dependencies
   graph/          # StateGraph and processing nodes
   llm/            # Gemini client integration
-  memory/         # In-memory session state
+  memory/         # Session state (Redis when available, else in-process dict)
   prompts/        # Prompt templates
   db/             # DSN/URL helpers
-  rag/            # Index/query utilities (in progress)
+  rag/            # Placeholder hooks for future vector indexing; retrieval lives in graph nodes
   tools/          # Job crawler scripts
 config/
   settings.py     # Environment-based settings
@@ -198,6 +199,14 @@ This command rewrites:
 
 - Visit `http://localhost:8000/chatbot`.
 
+### End-of-course demo checklist
+
+1. Start Postgres (or point `POSTGRES_DSN` to your instance), then load data: `python -m app.tools.crawl` and/or `python -m app.tools.generate_fake_jobs --rows 900` followed by `python -m app.tools.import_jobs`.
+2. Set `GEMINI_API_KEY` in `.env` for the best answers (the app still runs without it using rule-based fallbacks).
+3. Run `python -m app.main` and open `http://localhost:8000/chatbot`.
+4. Try one **search** (Vietnamese or English, with role + location + salary), one **follow-up** in the same browser tab (session persists via `sessionStorage` + `session_id`), and one **compare** (for example: `So sánh AI Engineer và Data Scientist` or `Compare AI Engineer and Data Scientist in Vietnam`).
+5. Optional: start Redis so session survives server restarts for the same `session_id`.
+
 ## 6) Key API Endpoints
 
 ### Health Check
@@ -237,27 +246,27 @@ pytest
 
 Current test coverage includes:
 
+- `tests/conftest.py`: fast defaults (no slow Postgres socket waits during retrieval; in-memory sessions during tests).
 - `tests/test_api.py`: API endpoint behavior.
-- `tests/test_graph.py`: graph flow and node pipeline logic.
+- `tests/test_graph.py`: graph flow, job comparison, and responder helpers.
 
 ## 8) Current Status and Limitations
 
 ### Completed
 
-- Implemented a modular graph-based conversational architecture.
-- Connected job ingestion and filtered retrieval workflows.
-- Delivered a working UI for demonstration.
+- Modular `LangGraph` architecture with conditional routing by intent.
+- Job ingestion and PostgreSQL-backed retrieval with ranking and progressive filter relaxation.
+- Working web UI, optional Redis-backed sessions, and a guided demo checklist in this README.
+- `job_compare` flow with LLM or template fallback responses.
 
 ### Limitations
 
-- Semantic vector indexing/retrieval with Pinecone is not fully implemented yet.
-- Session memory is currently in-memory and not optimized for multi-worker deployment.
-- Job ranking does not yet use a high-quality reranker.
+- Semantic vector indexing and retrieval with Pinecone (or another vector store) is not wired into the graph yet.
+- Retrieval quality is driven by SQL keyword filters and heuristics, not embeddings.
+- Job ranking does not yet use a dedicated cross-encoder reranker.
 
-## 9) Future Improvements
+### Future improvements
 
-- Complete semantic retrieval pipeline (embeddings + Pinecone + reranker).
-- Move session storage to Redis for production scalability.
+- Add embeddings + vector retrieval (and optional reranking) alongside SQL filters.
 - Extend salary parsing for more formats (USD, gross/net, shorthand).
-- Add integration tests for flows involving both LLM and database operations.
-
+- Add integration tests that exercise Postgres with a disposable test database.

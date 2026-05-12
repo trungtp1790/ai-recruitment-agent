@@ -71,10 +71,13 @@ class GeminiClient:
 
         lowered = text.lower()
         normalized = _strip_diacritics(lowered)
-        if _looks_like_job_search(lowered, normalized):
-            return "job_search"
+        # Compare intent must win over broad job-search heuristics (e.g. role keywords in both titles).
         if "so sanh" in normalized:
             return "job_compare"
+        if re.search(r"\bcompare\b.+\band\b", normalized):
+            return "job_compare"
+        if _looks_like_job_search(lowered, normalized):
+            return "job_search"
         if "ban la ai" in normalized:
             return "identity_query"
         if any(word in normalized for word in ("hello", "hi", "xin chao")):
